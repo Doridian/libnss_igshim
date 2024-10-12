@@ -9,7 +9,7 @@
 #include <string.h>
 
 #define NSSWITCH_CONFIG "/etc/nsswitch.conf"
-#define NSSWITCH_SECTION "#igshim_backend"
+#define NSSWITCH_SECTION "#igshim"
 
 #define IS_WHITESPACE(ptr) (*ptr == ' ' || *ptr == '\t' || *ptr == '\n' || *ptr == '\r')
 
@@ -112,7 +112,7 @@ void igshim_module_init()
     (void)fclose(fp);
 
     if (strlen(parent_module) < 1) {
-        printf("[CRITICAL] igshim_backend is empty\n");
+        printf("[CRITICAL] #igshim section is empty or not defined in " NSSWITCH_CONFIG "\n");
         exit(1);
     }
 

@@ -52,7 +52,7 @@ apk install libnss_igshim
 
 An example can be found in this repo as [nsswitch.conf](nsswitch.conf) configured for Kanidm
 
-The important bits are defining `igshim` in `initgroups` and `groups` as well as the `#igshim_backend:` line.
+The important bits are defining `igshim` in `initgroups` and `groups` as well as the `#igshim:` line.
 
 ## Building locally
 
