@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <dlfcn.h>
+#include <string.h>
 
 #define PARENT_MODULE "kanidm"
 
@@ -85,21 +86,23 @@ void igshim_module_init()
     }
 }
 
-enum nss_status _nss_igshim_initgroups_dyn(const char* state, gid_t gid, long* start, long* size, gid_t** groupsp, long limit, int *errorp)
+enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long* start, long* size, gid_t** groupsp, long limit, int *errorp)
 {
 	if (gid != -1) {
 		return NSS_STATUS_NOTFOUND;
 	}
 
 	int res;
-	long i;
-	nss_mod_setgrent();
-
+	char buf[4096];
 	struct group grp;
 	struct group *grpp;
-	char buf[4096];
+	long entries;
 
-	for (i = 0; i < limit; i++) {
+	char **members;
+
+	nss_mod_setgrent();
+
+	while(entries < limit) {
 		res = nss_mod_getgrent_r(&grp, buf, sizeof(buf), &grpp);
         if (!res) {
             break;
@@ -109,6 +112,7 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* state, gid_t gid, long* s
 			nss_mod_endgrent();
             return NSS_STATUS_TRYAGAIN;
 		}
+
 
 		if (*size == *start) {
 			*size *= 2;
@@ -120,8 +124,19 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* state, gid_t gid, long* s
 			}
 		}
 
+		for (members = grp.gr_mem; *members != NULL; members++) {
+			if (strcmp(username, *members) == 0) {
+				break;
+			}
+		}
+
+		if (*members == NULL) {
+			continue;
+		}
+
 		(*groupsp)[*start] = grp.gr_gid;
 		(*start)++;
+		entries++;
 	}
 
 	nss_mod_endgrent();
