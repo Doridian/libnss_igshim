@@ -96,7 +96,7 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long
     char buf[4096];
     struct group grp;
     struct group *grpp;
-    long entries;
+    long entries = 0;
 
     char **members;
 
