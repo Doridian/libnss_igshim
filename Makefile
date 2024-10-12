@@ -5,7 +5,8 @@ libnss_igshim.so: libnss_igshim.c
 	$(CC) -Wall -Werror -O2 -flto -shared -fPIC -o $@ $^
 
 install: libnss_igshim.so
-	cp -fv libnss_igshim.so /usr/lib/libnss_igshim.so
+	install -m 755 -d $(DESTDIR)/usr/lib
+	install -m 755 libnss_igshim.so $(DESTDIR)/usr/lib/libnss_igshim.so.2
 
 all: libnss_igshim.so
 

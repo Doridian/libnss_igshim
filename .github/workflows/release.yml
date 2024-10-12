@@ -1,0 +1,53 @@
+on:
+  push:
+    branches: [main]
+
+name: Release
+
+concurrency:
+  group: release
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: Release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build builder container
+        run: docker buildx build --platforms linux/amd64,linux/arm64 --build-arg "PUID=$(id -u)" --build-arg "PGID=$(id -g)" -t igshim-builder .github/container
+      - name: Run builder container
+        env:
+          ABUILD_PRIVATE_KEY: "${{ secrets.ABUILD_PRIVATE_KEY }}"
+          ABUILD_PUBLIC_KEY: "${{ vars.ABUILD_PUBLIC_KEY }}"
+          ABUILD_KEY_FILENAME: "${{ vars.ABUILD_KEY_FILENAME }}"
+          GIT_USER_NAME: "Mark Dietzer"
+          GIT_USER_EMAIL: "git@doridian.net"
+        run: |
+            dcmd() {
+                docker run --platform "$1" -e ABUILD_KEY_FILENAME -e ABUILD_PRIVATE_KEY -e ABUILD_PUBLIC_KEY -e GIT_USER_NAME -e GIT_USER_EMAIL --rm -v "$(pwd):/src" igshim-builder
+            }
+            dcmd linux/amd64
+            dcmd linux/arm64
+      - name: Release mainline
+        uses: ncipollo/release-action@v1
+        with:
+          name: latest
+          tag: latest
+          commit: ${{ github.sha }}
+          artifacts: ./repo/*
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          omitBody: true
+          omitBodyDuringUpdate: true
+          removeArtifacts: true
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: latest
+          force_push_tag: true

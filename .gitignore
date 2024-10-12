@@ -1,2 +1,5 @@
 *.so
 .vscode
+.abuild
+/packages
+/localbuild.sh
