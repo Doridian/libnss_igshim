@@ -19,8 +19,8 @@ enum nss_status
     NSS_STATUS_RETURN = 2
 };
 
-typedef void t_mod_setgrent(void);
-typedef void t_mod_endgrent(void);
+typedef enum nss_status t_mod_setgrent(void);
+typedef enum nss_status t_mod_endgrent(void);
 typedef enum nss_status t_mod_getgrent_r(struct group *gbuf, char* buf, size_t buflen, struct group **gbufp);
 
 t_mod_setgrent *nss_mod_setgrent;
@@ -100,7 +100,9 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long
 
     char **members;
 
-    nss_mod_setgrent();
+    if (nss_mod_setgrent() != NSS_STATUS_SUCCESS) {
+        goto initgroups_try_again;
+    }
 
     while(entries < limit) {
         res = nss_mod_getgrent_r(&grp, buf, sizeof(buf), &grpp);
@@ -108,9 +110,7 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long
             if (res == NSS_STATUS_NOTFOUND) {
                 break;
             }
-            perror("mod_getgrent_r");
-            nss_mod_endgrent();
-            return NSS_STATUS_TRYAGAIN;
+            goto initgroups_try_again;
         }
 
 
@@ -118,9 +118,8 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long
             *size *= 2;
             *groupsp = realloc(*groupsp, *size * sizeof(gid_t));
             if (!*groupsp) {
-                *errorp = ENOMEM;
-                nss_mod_endgrent();
-                return NSS_STATUS_TRYAGAIN;
+                errno = ENOMEM;
+                goto initgroups_try_again;
             }
         }
 
@@ -139,6 +138,13 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long
         entries++;
     }
 
-    nss_mod_endgrent();
+    if (nss_mod_endgrent() != NSS_STATUS_SUCCESS) {
+        goto initgroups_try_again;
+    }
     return NSS_STATUS_SUCCESS;
+
+initgroups_try_again:
+    *errorp = errno;
+    nss_mod_endgrent();
+    return NSS_STATUS_TRYAGAIN;
 }
