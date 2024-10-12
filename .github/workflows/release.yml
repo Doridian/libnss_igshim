@@ -29,21 +29,33 @@ jobs:
           GIT_USER_NAME: "Mark Dietzer"
           GIT_USER_EMAIL: "git@doridian.net"
         run: |
-            dcmd() {
-                PLTF="$1"
-                docker buildx build --platform "$PLTF" --build-arg "PUID=$(id -u)" --build-arg "PGID=$(id -g)" -t igshim-builder .github/container
-                docker run --platform "$PLTF" -e ABUILD_PRIVATE_KEY -e ABUILD_PUBLIC_KEY -e GIT_USER_NAME -e GIT_USER_EMAIL --rm -v "$(pwd):/src" igshim-builder
-            }
-            mkdir -p packages
-            dcmd linux/amd64
-            dcmd linux/arm64
-      - name: Release mainline
+          dcmd() {
+              PLTF="$1"
+              docker buildx build --platform "$PLTF" --build-arg "PUID=$(id -u)" --build-arg "PGID=$(id -g)" -t igshim-builder .github/container
+              docker run --platform "$PLTF" -e ABUILD_PRIVATE_KEY -e ABUILD_PUBLIC_KEY -e GIT_USER_NAME -e GIT_USER_EMAIL --rm -v "$(pwd):/src" igshim-builder
+          }
+          mkdir -p packages
+          dcmd linux/amd64
+          dcmd linux/arm64
+      - name: Release x86_64
         uses: ncipollo/release-action@v1
         with:
-          name: latest
-          tag: latest
+          name: x86_64
+          tag: x86_64
           commit: ${{ github.sha }}
-          artifacts: ./packages/*
+          artifacts: ./packages/x86_64/*
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          omitBody: true
+          omitBodyDuringUpdate: true
+          removeArtifacts: true
+      - name: Release aarch64
+        uses: ncipollo/release-action@v1
+        with:
+          name: aarch64
+          tag: aarch64
+          commit: ${{ github.sha }}
+          artifacts: ./packages/aarch64/*
           allowUpdates: true
           artifactErrorsFailBuild: true
           omitBody: true
