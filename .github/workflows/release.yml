@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
       - name: Run builder container
         env:
           ABUILD_PRIVATE_KEY: "${{ secrets.ABUILD_PRIVATE_KEY }}"
