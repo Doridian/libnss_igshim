@@ -49,6 +49,10 @@ jobs:
           omitBody: true
           omitBodyDuringUpdate: true
           removeArtifacts: true
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: x86_64
+          force_push_tag: true
       - name: Release aarch64
         uses: ncipollo/release-action@v1
         with:
@@ -63,5 +67,5 @@ jobs:
           removeArtifacts: true
       - uses: rickstaa/action-create-tag@v1
         with:
-          tag: latest
+          tag: aarch64
           force_push_tag: true
