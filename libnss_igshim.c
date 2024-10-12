@@ -8,8 +8,6 @@
 #include <dlfcn.h>
 #include <string.h>
 
-#define PARENT_MODULE "kanidm"
-
 enum nss_status
 {
     NSS_STATUS_TRYAGAIN = -2,
@@ -62,34 +60,44 @@ static void *get_fn(void *dll, const char *name, const char *service)
 __attribute__((constructor))
 void igshim_module_init()
 {
+    const char* parent_module = getenv("IGSHIM_PARENT_MODULE");
+    if (parent_module == NULL) {
+        printf("[CRITICAL] IGSHIM_PARENT_MODULE is NULL\n");
+        exit(1);
+    }
+    if (strlen(parent_module) == 0) {
+        printf("[CRITICAL] IGSHIM_PARENT_MODULE is empty\n");
+        exit(1);
+    }
+
     void* dll;
-    dll = get_dll(PARENT_MODULE);
+    dll = get_dll(parent_module);
     if (dll == NULL) {
-        printf("[CRITICAL] dll is NULL\n");
+        printf("[CRITICAL] Can't find IGSHIM_PARENT_MODULE=%s\n", parent_module);
         exit(1);
     }
 
-    nss_mod_setgrent = (t_mod_setgrent*)get_fn(dll, "setgrent", PARENT_MODULE);
+    nss_mod_setgrent = (t_mod_setgrent*)get_fn(dll, "setgrent", parent_module);
     if (nss_mod_setgrent == NULL) {
-        printf("[CRITICAL] nss_mod_setgrent is NULL\n");
+        printf("[CRITICAL] Can't find nss_mod_setgrent\n");
         exit(1);
     }
 
-    nss_mod_endgrent = (t_mod_endgrent*)get_fn(dll, "endgrent", PARENT_MODULE);
+    nss_mod_endgrent = (t_mod_endgrent*)get_fn(dll, "endgrent", parent_module);
     if (nss_mod_endgrent == NULL) {
-        printf("[CRITICAL] nss_mod_endgrent is NULL\n");
+        printf("[CRITICAL] Can't find nss_mod_endgrent\n");
         exit(1);
     }
 
-    nss_mod_getgrent_r = (t_mod_getgrent_r*)get_fn(dll, "getgrent_r", PARENT_MODULE);
+    nss_mod_getgrent_r = (t_mod_getgrent_r*)get_fn(dll, "getgrent_r", parent_module);
     if (nss_mod_getgrent_r == NULL) {
-        printf("[CRITICAL] nss_mod_getgrent_r is NULL\n");
+        printf("[CRITICAL] Can't find nss_mod_getgrent_r\n");
         exit(1);
     }
 
-    nss_mod_getpwnam_r = (t_mod_getpwnam_r*)get_fn(dll, "getpwnam_r", PARENT_MODULE);
+    nss_mod_getpwnam_r = (t_mod_getpwnam_r*)get_fn(dll, "getpwnam_r", parent_module);
     if (nss_mod_getpwnam_r == NULL) {
-        printf("[CRITICAL] nss_mod_getpwnam_r is NULL\n");
+        printf("[CRITICAL] Can't find nss_mod_getpwnam_r\n");
         exit(1);
     }
 }
