@@ -49,6 +49,7 @@ jobs:
           omitBody: true
           omitBodyDuringUpdate: true
           removeArtifacts: true
+          makeLatest: false
       - uses: rickstaa/action-create-tag@v1
         with:
           tag: x86_64
@@ -65,7 +66,12 @@ jobs:
           omitBody: true
           omitBodyDuringUpdate: true
           removeArtifacts: true
+          makeLatest: false
       - uses: rickstaa/action-create-tag@v1
         with:
           tag: aarch64
+          force_push_tag: true
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: latest
           force_push_tag: true
