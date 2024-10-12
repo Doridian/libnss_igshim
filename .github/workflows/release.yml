@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Build builder container
-        run: docker buildx build --platform linux/amd64,linux/arm64 --build-arg "PUID=$(id -u)" --build-arg "PGID=$(id -g)" -t igshim-builder .github/container
       - name: Run builder container
         env:
           ABUILD_PRIVATE_KEY: "${{ secrets.ABUILD_PRIVATE_KEY }}"
@@ -31,7 +29,9 @@ jobs:
           GIT_USER_EMAIL: "git@doridian.net"
         run: |
             dcmd() {
-                docker run --platform "$1" -e ABUILD_KEY_FILENAME -e ABUILD_PRIVATE_KEY -e ABUILD_PUBLIC_KEY -e GIT_USER_NAME -e GIT_USER_EMAIL --rm -v "$(pwd):/src" igshim-builder
+                PLTF="$1"
+                docker buildx build --platform "$PLTF" --build-arg "PUID=$(id -u)" --build-arg "PGID=$(id -g)" -t igshim-builder .github/container
+                docker run --platform "$PLTF" -e ABUILD_KEY_FILENAME -e ABUILD_PRIVATE_KEY -e ABUILD_PUBLIC_KEY -e GIT_USER_NAME -e GIT_USER_EMAIL --rm -v "$(pwd):/src" igshim-builder
             }
             dcmd linux/amd64
             dcmd linux/arm64
@@ -41,7 +41,7 @@ jobs:
           name: latest
           tag: latest
           commit: ${{ github.sha }}
-          artifacts: ./repo/*
+          artifacts: ./packages/*
           allowUpdates: true
           artifactErrorsFailBuild: true
           omitBody: true
