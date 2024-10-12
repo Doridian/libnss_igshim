@@ -5,18 +5,16 @@ export HOME=/home/user
 
 mkdir -p /home/user/.abuild
 if [ ! -z "${ABUILD_PRIVATE_KEY-}" ]; then
-    echo "$ABUILD_PRIVATE_KEY" > "/home/user/.abuild/${ABUILD_KEY_FILENAME}"
-    #echo >> "/home/user/.abuild/${ABUILD_KEY_FILENAME}"
-    chmod 600 "/home/user/.abuild/${ABUILD_KEY_FILENAME}"
+    echo "$ABUILD_PRIVATE_KEY" > "/home/user/.abuild/abuild.key"
+    chmod 600 "/home/user/.abuild/abuild.key"
 fi
 
 if [ ! -z "${ABUILD_PUBLIC_KEY-}" ]; then
-    echo "$ABUILD_PUBLIC_KEY" > "/home/user/.abuild/${ABUILD_KEY_FILENAME}.pub"
-    #echo >> "/home/user/.abuild/${ABUILD_KEY_FILENAME}.pub"
+    echo "$ABUILD_PUBLIC_KEY" > "/home/user/.abuild/abuild.key.pub"
     sudo cp -fv /home/user/.abuild/*.pub /etc/apk/keys/
 fi
 
-echo "PACKAGER_PRIVKEY=\"/home/user/.abuild/${ABUILD_KEY_FILENAME}\"" > /home/user/.abuild/abuild.conf
+echo 'PACKAGER_PRIVKEY="/home/user/.abuild/abuild.key"' > /home/user/.abuild/abuild.conf
 echo "PACKAGER=\"${GIT_USER_NAME} <${GIT_USER_EMAIL}>\"" >> /home/user/.abuild/abuild.conf
 echo 'REPODEST="/src/packages"' >> /home/user/.abuild/abuild.conf
 

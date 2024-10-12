@@ -26,14 +26,13 @@ jobs:
         env:
           ABUILD_PRIVATE_KEY: "${{ secrets.ABUILD_PRIVATE_KEY }}"
           ABUILD_PUBLIC_KEY: "${{ vars.ABUILD_PUBLIC_KEY }}"
-          ABUILD_KEY_FILENAME: "${{ vars.ABUILD_KEY_FILENAME }}"
           GIT_USER_NAME: "Mark Dietzer"
           GIT_USER_EMAIL: "git@doridian.net"
         run: |
             dcmd() {
                 PLTF="$1"
                 docker buildx build --platform "$PLTF" --build-arg "PUID=$(id -u)" --build-arg "PGID=$(id -g)" -t igshim-builder .github/container
-                docker run --platform "$PLTF" -e ABUILD_KEY_FILENAME -e ABUILD_PRIVATE_KEY -e ABUILD_PUBLIC_KEY -e GIT_USER_NAME -e GIT_USER_EMAIL --rm -v "$(pwd):/src" igshim-builder
+                docker run --platform "$PLTF" -e ABUILD_PRIVATE_KEY -e ABUILD_PUBLIC_KEY -e GIT_USER_NAME -e GIT_USER_EMAIL --rm -v "$(pwd):/src" igshim-builder
             }
             mkdir -p packages
             dcmd linux/amd64
