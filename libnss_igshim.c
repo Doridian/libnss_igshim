@@ -21,7 +21,7 @@ enum nss_status
 
 typedef void t_mod_setgrent(void);
 typedef void t_mod_endgrent(void);
-typedef int t_mod_getgrent_r(struct group *gbuf, char* buf, size_t buflen, struct group **gbufp);
+typedef enum nss_status t_mod_getgrent_r(struct group *gbuf, char* buf, size_t buflen, struct group **gbufp);
 
 t_mod_setgrent *nss_mod_setgrent;
 t_mod_endgrent *nss_mod_endgrent;
@@ -104,10 +104,10 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long
 
     while(entries < limit) {
         res = nss_mod_getgrent_r(&grp, buf, sizeof(buf), &grpp);
-        if (!res) {
+        if (res == NSS_STATUS_NOTFOUND) {
             break;
         }
-        if (errno && errno != EAGAIN) {
+        if (res != NSS_STATUS_SUCCESS) {
             perror("mod_getgrent_r");
             nss_mod_endgrent();
             return NSS_STATUS_TRYAGAIN;
