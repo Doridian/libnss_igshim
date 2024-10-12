@@ -104,10 +104,10 @@ enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long
 
     while(entries < limit) {
         res = nss_mod_getgrent_r(&grp, buf, sizeof(buf), &grpp);
-        if (res == NSS_STATUS_NOTFOUND) {
-            break;
-        }
         if (res != NSS_STATUS_SUCCESS) {
+            if (res == NSS_STATUS_NOTFOUND) {
+                break;
+            }
             perror("mod_getgrent_r");
             nss_mod_endgrent();
             return NSS_STATUS_TRYAGAIN;
