@@ -11,7 +11,7 @@ fi
 
 if [ ! -z "${ABUILD_PUBLIC_KEY-}" ]; then
     echo "$ABUILD_PUBLIC_KEY" > "/home/user/.abuild/abuild.key.pub"
-    sudo cp -fv /home/user/.abuild/*.pub /etc/apk/keys/
+    sudo cp -fv /home/user/.abuild/abuild.key.pub /etc/apk/keys/
 fi
 
 echo 'PACKAGER_PRIVKEY="/home/user/.abuild/abuild.key"' > /home/user/.abuild/abuild.conf
