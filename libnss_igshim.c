@@ -8,6 +8,29 @@
 #include <dlfcn.h>
 #include <string.h>
 
+#define NSSWITCH_CONFIG "/etc/nsswitch.conf"
+#define NSSWITCH_SECTION "#igshim_backend"
+
+#define IS_WHITESPACE(ptr) (*ptr == ' ' || *ptr == '\t' || *ptr == '\n' || *ptr == '\r')
+
+#define TRIM_START(ptr) while (IS_WHITESPACE(ptr)) { \
+                            ptr++; \
+                            if (!*ptr) { \
+                                break; \
+                            } \
+                        }
+
+#define TRIM_AFTER_FIRST(ptr) { \
+                                    char *tmpptr = ptr; \
+                                    while (*tmpptr) { \
+                                        if (IS_WHITESPACE(tmpptr)) { \
+                                            *tmpptr = '\0'; \
+                                            break; \
+                                        } \
+                                        tmpptr++; \
+                                    } \
+                                }
+
 enum nss_status
 {
     NSS_STATUS_TRYAGAIN = -2,
@@ -60,44 +83,67 @@ static void *get_fn(void *dll, const char *name, const char *service)
 __attribute__((constructor))
 void igshim_module_init()
 {
-    const char* parent_module = getenv("IGSHIM_PARENT_MODULE");
-    if (parent_module == NULL) {
-        printf("[CRITICAL] IGSHIM_PARENT_MODULE is NULL\n");
+    char parent_module[4096] = {0};
+    char buf[4096] = {0};
+    FILE *fp = fopen(NSSWITCH_CONFIG, "r");
+    if (fp == NULL) {
+        printf("[CRITICAL] Can't open " NSSWITCH_CONFIG "\n");
         exit(1);
     }
-    if (strlen(parent_module) == 0) {
-        printf("[CRITICAL] IGSHIM_PARENT_MODULE is empty\n");
+
+    while(fgets(buf, sizeof(buf), fp) != NULL) {
+        char *tmp = buf;
+        TRIM_START(tmp);
+        char *colon_tmp = strstr(tmp, ":");
+        if (colon_tmp == NULL) {
+            continue;
+        }
+        *colon_tmp = '\0';
+        if (strcmp(tmp, NSSWITCH_SECTION) != 0) {
+            continue;
+        }
+        tmp = colon_tmp + 1;
+        TRIM_START(tmp);
+        TRIM_AFTER_FIRST(tmp);
+        strcpy(parent_module, tmp);
+        break;
+    }
+
+    (void)fclose(fp);
+
+    if (strlen(parent_module) < 1) {
+        printf("[CRITICAL] igshim_backend is empty\n");
         exit(1);
     }
 
     void* dll;
     dll = get_dll(parent_module);
     if (dll == NULL) {
-        printf("[CRITICAL] Can't find IGSHIM_PARENT_MODULE=%s\n", parent_module);
+        printf("[CRITICAL] Can't find module %s\n", parent_module);
         exit(1);
     }
 
     nss_mod_setgrent = (t_mod_setgrent*)get_fn(dll, "setgrent", parent_module);
     if (nss_mod_setgrent == NULL) {
-        printf("[CRITICAL] Can't find nss_mod_setgrent\n");
+        printf("[CRITICAL] Can't find handler for setgrent in %s\n", parent_module);
         exit(1);
     }
 
     nss_mod_endgrent = (t_mod_endgrent*)get_fn(dll, "endgrent", parent_module);
     if (nss_mod_endgrent == NULL) {
-        printf("[CRITICAL] Can't find nss_mod_endgrent\n");
+        printf("[CRITICAL] Can't find handler for endgrent in %s\n", parent_module);
         exit(1);
     }
 
     nss_mod_getgrent_r = (t_mod_getgrent_r*)get_fn(dll, "getgrent_r", parent_module);
     if (nss_mod_getgrent_r == NULL) {
-        printf("[CRITICAL] Can't find nss_mod_getgrent_r\n");
+        printf("[CRITICAL] Can't find handler for getgrent_r in %s\n", parent_module);
         exit(1);
     }
 
     nss_mod_getpwnam_r = (t_mod_getpwnam_r*)get_fn(dll, "getpwnam_r", parent_module);
     if (nss_mod_getpwnam_r == NULL) {
-        printf("[CRITICAL] Can't find nss_mod_getpwnam_r\n");
+        printf("[CRITICAL] Can't find handler for getpwnam_r in %s\n", parent_module);
         exit(1);
     }
 }
