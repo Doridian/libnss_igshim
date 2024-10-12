@@ -22,10 +22,12 @@ enum nss_status
 typedef enum nss_status t_mod_setgrent(void);
 typedef enum nss_status t_mod_endgrent(void);
 typedef enum nss_status t_mod_getgrent_r(struct group *gbuf, char* buf, size_t buflen, struct group **gbufp);
+typedef enum nss_status t_mod_getpwnam_r(const char *name, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result);
 
 t_mod_setgrent *nss_mod_setgrent;
 t_mod_endgrent *nss_mod_endgrent;
 t_mod_getgrent_r *nss_mod_getgrent_r;
+t_mod_getpwnam_r *nss_mod_getpwnam_r;
 
 // get_dll from: https://github.com/pikhq/musl-nscd/blob/master/src/main.c
 static void *get_dll(const char *service)
@@ -84,16 +86,32 @@ void igshim_module_init()
         printf("[CRITICAL] nss_mod_getgrent_r is NULL\n");
         exit(1);
     }
+
+    nss_mod_getpwnam_r = (t_mod_getpwnam_r*)get_fn(dll, "getpwnam_r", PARENT_MODULE);
+    if (nss_mod_getpwnam_r == NULL) {
+        printf("[CRITICAL] nss_mod_getpwnam_r is NULL\n");
+        exit(1);
+    }
 }
 
 enum nss_status _nss_igshim_initgroups_dyn(const char* username, gid_t gid, long* start, long* size, gid_t** groupsp, long limit, int *errorp)
 {
-    if (gid != -1) {
+    if (gid != -1 || username == NULL) {
         return NSS_STATUS_NOTFOUND;
     }
 
     int res;
     char buf[4096];
+
+    struct passwd pwd;
+    struct passwd *pwdp;
+    res = nss_mod_getpwnam_r(username, &pwd, buf, sizeof(buf), &pwdp);
+    if (res != NSS_STATUS_SUCCESS) {
+        *errorp = errno;
+        return res;
+    }
+
+
     struct group grp;
     struct group *grpp;
     long entries = 0;
