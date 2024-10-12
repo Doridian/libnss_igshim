@@ -1,0 +1,17 @@
+#!/bin/sh
+set -ex
+
+cd /src
+
+make clean
+make
+make install
+
+cp -fv nsswitch.conf /etc/nsswitch.conf
+killall nscd || true
+nscd &
+
+sleep 0.1
+
+id doridian
+id root
