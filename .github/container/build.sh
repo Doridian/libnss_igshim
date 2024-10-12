@@ -20,8 +20,6 @@ echo "PACKAGER_PRIVKEY=\"/home/user/.abuild/${ABUILD_KEY_FILENAME}\"" > /home/us
 echo "PACKAGER=\"${GIT_USER_NAME} <${GIT_USER_EMAIL}>\"" >> /home/user/.abuild/abuild.conf
 echo 'REPODEST="/src/packages"' >> /home/user/.abuild/abuild.conf
 
-rm -rf /src/packages && mkdir -p /src/packages
-
 git config --global user.name "${GIT_USER_NAME}"
 git config --global user.email "${GIT_USER_EMAIL}"
 

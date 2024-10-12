@@ -35,6 +35,7 @@ jobs:
                 docker buildx build --platform "$PLTF" --build-arg "PUID=$(id -u)" --build-arg "PGID=$(id -g)" -t igshim-builder .github/container
                 docker run --platform "$PLTF" -e ABUILD_KEY_FILENAME -e ABUILD_PRIVATE_KEY -e ABUILD_PUBLIC_KEY -e GIT_USER_NAME -e GIT_USER_EMAIL --rm -v "$(pwd):/src" igshim-builder
             }
+            mkdir -p packages
             dcmd linux/amd64
             dcmd linux/arm64
       - name: Release mainline
