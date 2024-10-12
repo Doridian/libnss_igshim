@@ -10,9 +10,10 @@ license="MIT"
 source=""
 
 build() {
-	make
+    make clean
+    make
 }
 
 package() {
-	make DESTDIR="$pkgdir" install
+    make DESTDIR="$pkgdir" install
 }
