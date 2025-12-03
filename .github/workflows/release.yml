@@ -20,8 +20,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Update Docker version
+        uses: docker/setup-docker-action@v4
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+        with:
+          channel: stable
+          github-token: ${{ secrets.EXT_GITHUB_TOKEN }}
+          daemon-config: |
+            {
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Run builder container
         env:
           ABUILD_PRIVATE_KEY: "${{ secrets.ABUILD_PRIVATE_KEY }}"
