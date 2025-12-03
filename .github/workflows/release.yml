@@ -26,7 +26,6 @@ jobs:
           DOCKER_CLI_EXPERIMENTAL: enabled
         with:
           channel: stable
-          github-token: ${{ secrets.EXT_GITHUB_TOKEN }}
           daemon-config: |
             {
               "features": {
