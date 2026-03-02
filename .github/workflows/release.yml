@@ -21,7 +21,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
       - name: Update Docker version
-        uses: docker/setup-docker-action@v4
+        uses: docker/setup-docker-action@v5
         env:
           DOCKER_CLI_EXPERIMENTAL: enabled
         with:
