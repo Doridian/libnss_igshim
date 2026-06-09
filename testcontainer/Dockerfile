@@ -1,4 +1,4 @@
-FROM alpine:3.23
+FROM alpine:3.24
 
 RUN echo '@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing' >> "$ROOTFS_PATH/etc/apk/repositories"
 
